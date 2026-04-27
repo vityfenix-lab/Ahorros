@@ -1,9 +1,13 @@
 <!DOCTYPE html>
+
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#0a1628">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ahorros">
 <title>Mis Ahorros</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500;1,600&family=JetBrains+Mono:wght@500;600&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -30,7 +34,17 @@ body{font-family:'Inter Tight',system-ui,sans-serif;background:var(--bg);color:v
 .hsl{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--tm);margin-bottom:4px;font-family:'JetBrains Mono',monospace}
 .hsv{font-family:'Fraunces',serif;font-size:18px;font-weight:500}
 .gn{color:var(--gn)}
+.rd2{color:var(--rd)}
 .hss{font-size:11px;color:var(--td);margin-top:2px}
+/* Growth metrics */
+.gms{margin:0 20px 20px;padding:18px;background:var(--sf);border:1px solid var(--bd);border-radius:18px}
+.gmh{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--td);margin-bottom:12px}
+.gmg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.gmi{padding:10px;background:var(--bg2);border-radius:12px;border:1px solid var(--bd);text-align:center}
+.gmlbl{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--tm);font-family:'JetBrains Mono',monospace;margin-bottom:6px}
+.gmpc{font-family:'Fraunces',serif;font-size:16px;font-weight:600;letter-spacing:-.02em}
+.gmpc.up{color:var(--gn)}.gmpc.dn{color:var(--rd)}.gmpc.zr{color:var(--td)}
+.gmsub{font-size:9px;color:var(--tm);font-family:'JetBrains Mono',monospace;margin-top:3px}
 .rb{margin:0 20px 20px;padding:16px 18px;background:linear-gradient(135deg,rgba(255,179,71,.12),rgba(255,179,71,.04));border:1px solid rgba(255,179,71,.25);border-radius:16px;display:flex;align-items:center;gap:14px;cursor:pointer;position:relative;overflow:hidden}
 .rb.ur{background:linear-gradient(135deg,rgba(255,122,138,.15),rgba(255,122,138,.04));border-color:rgba(255,122,138,.3)}
 .ric{width:38px;height:38px;border-radius:50%;flex-shrink:0;background:rgba(255,179,71,.15);display:flex;align-items:center;justify-content:center;color:var(--am);font-size:18px}
@@ -43,8 +57,11 @@ body{font-family:'Inter Tight',system-ui,sans-serif;background:var(--bg);color:v
 .pd::before{content:"";position:absolute;inset:-4px;border-radius:50%;background:inherit;opacity:.4;animation:p 1.8s infinite}
 @keyframes p{0%{transform:scale(.8);opacity:.5}100%{transform:scale(2);opacity:0}}
 .gl{margin:0 20px 24px;padding:20px;background:var(--sf);border:1px solid var(--bd);border-radius:20px}
-.gh{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-.gt{font-size:13px;color:var(--td)}
+.gh{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:8px}
+.gt{font-size:13px;color:var(--td);display:flex;align-items:center;gap:6px;flex:1;min-width:0}
+.gt-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ged{background:none;border:none;color:var(--tm);cursor:pointer;padding:4px;font-size:14px;flex-shrink:0}
+.ged:active{color:var(--ac)}
 .gp{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--ac);font-weight:600}
 .gb{height:6px;background:rgba(255,255,255,.05);border-radius:99px;overflow:hidden}
 .gf{height:100%;background:linear-gradient(135deg,#d4a574,#e8c89a,#b8895c);border-radius:99px;transition:width .8s}
@@ -163,11 +180,26 @@ body{font-family:'Inter Tight',system-ui,sans-serif;background:var(--bg);color:v
       <div><div class="hsl">Intereses</div><div class="hsv gn" id="ti">€0</div><div class="hss" id="ip">+0,00%</div></div>
     </div>
   </div>
+
+  <div class="gms">
+    <div class="gmh">📈 Crecimiento del patrimonio</div>
+    <div class="gmg">
+      <div class="gmi"><div class="gmlbl">Mes ant.</div><div class="gmpc" id="gmM">—</div><div class="gmsub" id="gmMs"></div></div>
+      <div class="gmi"><div class="gmlbl">YTD</div><div class="gmpc" id="gmY">—</div><div class="gmsub" id="gmYs"></div></div>
+      <div class="gmi"><div class="gmlbl">Total</div><div class="gmpc" id="gmT">—</div><div class="gmsub" id="gmTs"></div></div>
+    </div>
+  </div>
+
   <div class="gl">
-    <div class="gh"><div class="gt">🎯 Objetivo entrada vivienda</div><div class="gp" id="gpc">0%</div></div>
+    <div class="gh">
+      <div class="gt">🎯 <span class="gt-name" id="goalName">Entrada vivienda</span></div>
+      <button class="ged" onclick="ogm()">✏️</button>
+      <div class="gp" id="gpc">0%</div>
+    </div>
     <div class="gb"><div class="gf" id="gff" style="width:0"></div></div>
     <div class="gff"><span id="gc">€0</span><span id="gtg">/ €60.000</span></div>
   </div>
+
   <div id="ms" class="hi"><div class="st"><h2>Próximos vencimientos</h2></div><div id="mlist" class="ml"></div></div>
   <div class="tabs" id="tbs">
     <button class="tab ac" data-f="all">Todos</button>
@@ -262,6 +294,17 @@ body{font-family:'Inter Tight',system-ui,sans-serif;background:var(--bg);color:v
   </div>
 </div>
 
+<div class="mb" id="gmod">
+  <div class="mo">
+    <div class="mh"></div>
+    <div class="mtt">Editar objetivo</div>
+    <div class="ms">Cambia el nombre y la cantidad objetivo</div>
+    <div class="fl"><label>Nombre del objetivo</label><input type="text" id="gN" placeholder="Entrada vivienda"></div>
+    <div class="fl"><label>Cantidad objetivo (€)</label><input type="number" id="gA" step="100" placeholder="60000"></div>
+    <div class="br"><button class="bt bs" onclick="cm('gmod')">Cancelar</button><button class="bt bp" onclick="sg()">Guardar</button></div>
+  </div>
+</div>
+
 <div class="mb" id="emod">
   <div class="mo">
     <div class="mh"></div>
@@ -277,7 +320,7 @@ body{font-family:'Inter Tight',system-ui,sans-serif;background:var(--bg);color:v
       <div class="br"><button class="bt bs" onclick="cm('emod')">Cerrar</button><button class="bt bp" onclick="cpy()">Copiar</button></div>
     </div>
     <div id="impPanel" class="hi">
-      <div class="fl"><label>Pega aquí tu backup</label><textarea id="impTxt" placeholder='[{"id":"...","name":"..."}]'></textarea></div>
+      <div class="fl"><label>Pega aquí tu backup</label><textarea id="impTxt" placeholder='{"products":[...],"goal":{...}}'></textarea></div>
       <div class="br"><button class="bt bs" onclick="cm('emod')">Cancelar</button><button class="bt bp" onclick="impd()">Restaurar</button></div>
     </div>
   </div>
@@ -288,9 +331,10 @@ body{font-family:'Inter Tight',system-ui,sans-serif;background:var(--bg);color:v
 <script>
 const COLS=['#d4a574','#5fd4a4','#7ab5ff','#c98aff','#ff9a7a','#ffd45f','#5fb8d4','#ff7aa8'];
 let ps=[],ap=null,sc=COLS[0],ei=null,ec=null,dc=null,cf='all';
+let goal={name:'Entrada vivienda',target:60000};
 let storageMode='unknown';
-const RD=30,UD=7,GT=60000;
-const KEY='ahorros_data_v2';
+const RD=30,UD=7;
+const KEY='ahorros_data_v3';
 
 const f=n=>new Intl.NumberFormat('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n||0);
 const fi=n=>new Intl.NumberFormat('es-ES').format(Math.floor(n||0));
@@ -299,21 +343,13 @@ const fd=d=>new Date(d).toLocaleDateString('es-ES',{day:'2-digit',month:'short',
 const fds=d=>new Date(d).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'2-digit'});
 const du=d=>Math.ceil((new Date(d)-new Date(new Date().toDateString()))/(1000*60*60*24));
 
-// ===== STORAGE LAYER (window.storage + localStorage fallback) =====
 async function loadFromStorage(){
-  // 1) Intentar window.storage (sandbox de Claude)
   if(typeof window!=='undefined'&&window.storage&&typeof window.storage.get==='function'){
-    try{
-      const r=await window.storage.get(KEY);
-      if(r&&r.value){storageMode='cloud';return JSON.parse(r.value)}
-    }catch(e){}
+    try{const r=await window.storage.get(KEY);if(r&&r.value){storageMode='cloud';return JSON.parse(r.value)}}catch(e){}
   }
-  // 2) Fallback a localStorage
-  try{
-    const v=localStorage.getItem(KEY);
-    if(v){storageMode='local';return JSON.parse(v)}
-  }catch(e){}
-  // 3) Sin datos
+  try{const v=localStorage.getItem(KEY);if(v){storageMode='local';return JSON.parse(v)}}catch(e){}
+  // Migración desde v2
+  try{const v2=localStorage.getItem('ahorros_data_v2');if(v2){storageMode='local';return{products:JSON.parse(v2),goal:null}}}catch(e){}
   if(typeof window!=='undefined'&&window.storage)storageMode='cloud';
   else{try{localStorage.setItem('_t','1');localStorage.removeItem('_t');storageMode='local'}catch(e){storageMode='memory'}}
   return null;
@@ -323,21 +359,19 @@ async function writeToStorage(data){
   if(typeof window!=='undefined'&&window.storage&&typeof window.storage.set==='function'){
     try{await window.storage.set(KEY,JSON.stringify(data));ok=true}catch(e){}
   }
-  // Escribir SIEMPRE también en localStorage como respaldo
   try{localStorage.setItem(KEY,JSON.stringify(data));ok=true}catch(e){}
   return ok;
 }
 
 async function ld(){
   const data=await loadFromStorage();
-  if(data&&Array.isArray(data)&&data.length){ps=data}
-  else{sd()}
+  if(data){
+    if(Array.isArray(data)){ps=data}
+    else{ps=data.products||[];if(data.goal&&data.goal.target)goal=data.goal}
+  }
+  if(!ps||!ps.length)sd();
   let dt=false;
   ps.forEach(p=>{if(p.reminder===undefined){p.reminder=!!p.maturityDate;dt=true}});
-  if(!ps.some(p=>p.name&&p.name.toLowerCase().includes('ing'))){
-    ps.push({id:'p_ing',name:'ING Cuenta Nómina',type:'savings',color:'#ff9a7a',rate:0,startDate:new Date().toISOString().split('T')[0],maturityDate:'',reminder:false,movements:[]});
-    dt=true;
-  }
   if(dt)await sv(true);
   rd();
 }
@@ -350,11 +384,8 @@ function sd(){
   ];
 }
 async function sv(silent){
-  const ok=await writeToStorage(ps);
-  if(!silent){
-    if(ok)showSaved();
-    else ts('⚠ No se pudo guardar');
-  }
+  const ok=await writeToStorage({products:ps,goal:goal});
+  if(!silent){if(ok)showSaved();else ts('⚠ No se pudo guardar')}
 }
 function showSaved(){const e=document.getElementById('sind');e.classList.add('sh');setTimeout(()=>e.classList.remove('sh'),1800)}
 
@@ -364,7 +395,42 @@ const pi=p=>p.movements.filter(m=>m.type==='interest').reduce((s,m)=>s+m.amount,
 function pj(p){if(!p.rate||!p.maturityDate||!p.startDate)return 0;const d=(new Date(p.maturityDate)-new Date(p.startDate))/(1000*60*60*24);return pp(p)*(p.rate/100)*(d/365)}
 const um=()=>ps.filter(p=>p.reminder&&p.maturityDate).map(p=>({...p,days:du(p.maturityDate)})).filter(p=>p.days<=RD).sort((a,b)=>a.days-b.days);
 
-function rd(){rh();rhe();rg();rrb();rms();rps();rec()}
+// ===== GROWTH METRICS =====
+// Calcula el saldo total a una fecha concreta (todos los movimientos hasta esa fecha)
+function balanceAt(date){
+  const d=new Date(date);d.setHours(23,59,59,999);
+  let total=0;
+  ps.forEach(p=>{
+    p.movements.forEach(m=>{
+      if(new Date(m.date)<=d){
+        if(m.type==='contribution'||m.type==='interest')total+=m.amount;
+        else if(m.type==='withdrawal')total-=m.amount;
+      }
+    });
+  });
+  return total;
+}
+function getAllMovements(){
+  const all=[];ps.forEach(p=>p.movements.forEach(m=>all.push(m)));
+  return all.sort((a,b)=>new Date(a.date)-new Date(b.date));
+}
+function pctChange(from,to){
+  if(from===0)return to>0?Infinity:0;
+  return ((to-from)/Math.abs(from))*100;
+}
+function fmtPct(pct,fromVal){
+  if(pct===Infinity||(fromVal===0&&pct>0))return 'Nuevo';
+  if(pct===0)return '0,00%';
+  const sign=pct>0?'+':'';
+  return `${sign}${pct.toFixed(2)}%`;
+}
+function pctClass(pct){
+  if(pct===Infinity||pct>0)return 'up';
+  if(pct<0)return 'dn';
+  return 'zr';
+}
+
+function rd(){rh();rhe();rgm();rg();rrb();rms();rps();rec()}
 function rh(){document.getElementById('dn').textContent=new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'short'}).toUpperCase()}
 function rhe(){
   const ft=cf==='all'?ps:ps.filter(p=>p.type===cf);
@@ -373,12 +439,42 @@ function rhe(){
   document.getElementById('tp').textContent='€'+f(pr);document.getElementById('ti').textContent='€'+f(it);
   document.getElementById('ip').textContent=(pr>0?(it/pr*100):0).toFixed(2)+'%';
 }
+function rgm(){
+  const now=new Date(),today=new Date(now.toDateString());
+  const current=balanceAt(today);
+  // Mes anterior (hace 30 días)
+  const monthAgo=new Date(today);monthAgo.setDate(monthAgo.getDate()-30);
+  const monthVal=balanceAt(monthAgo);
+  const monthPct=pctChange(monthVal,current);
+  const gmM=document.getElementById('gmM'),gmMs=document.getElementById('gmMs');
+  gmM.className='gmpc '+pctClass(monthPct);
+  gmM.textContent=fmtPct(monthPct,monthVal);
+  gmMs.textContent=monthVal>0?'€'+fi(monthVal)+' →':'sin datos';
+  // YTD (1 enero del año actual)
+  const ytd=new Date(today.getFullYear(),0,1);
+  const ytdVal=balanceAt(new Date(ytd.getTime()-86400000));
+  const ytdPct=pctChange(ytdVal,current);
+  const gmY=document.getElementById('gmY'),gmYs=document.getElementById('gmYs');
+  gmY.className='gmpc '+pctClass(ytdPct);
+  gmY.textContent=fmtPct(ytdPct,ytdVal);
+  gmYs.textContent=ytdVal>0?'€'+fi(ytdVal)+' →':'desde 1 ene';
+  // Total (desde primer movimiento)
+  const all=getAllMovements();
+  const gmT=document.getElementById('gmT'),gmTs=document.getElementById('gmTs');
+  if(all.length<2){gmT.className='gmpc zr';gmT.textContent='—';gmTs.textContent='Pocos datos';return}
+  const firstAmount=all[0].amount;
+  const totalPct=pctChange(firstAmount,current);
+  gmT.className='gmpc '+pctClass(totalPct);
+  gmT.textContent=fmtPct(totalPct,firstAmount);
+  gmTs.textContent='Desde '+fds(all[0].date);
+}
 function rg(){
-  const tt=ps.reduce((s,p)=>s+pb(p),0),pc=Math.min(100,tt/GT*100);
+  const tt=ps.reduce((s,p)=>s+pb(p),0),pc=Math.min(100,tt/goal.target*100);
   document.getElementById('gpc').textContent=pc.toFixed(1)+'%';
   document.getElementById('gff').style.width=pc+'%';
   document.getElementById('gc').textContent='€'+f(tt);
-  document.getElementById('gtg').textContent='/ €'+fi(GT);
+  document.getElementById('gtg').textContent='/ €'+fi(goal.target);
+  document.getElementById('goalName').textContent=goal.name;
 }
 function rrb(){
   const u=um(),b=document.getElementById('rbn'),bd=document.getElementById('nbg');
@@ -460,6 +556,7 @@ function rdt(){
   g.addColorStop(0,p.color+'66');g.addColorStop(1,p.color+'00');
   dc=new Chart(ct,{type:'line',data:{labels:pt.map(x=>fds(x.x)),datasets:[{data:pt.map(x=>x.y),fill:true,backgroundColor:g,borderColor:p.color,borderWidth:2,tension:.3,pointRadius:4,pointBackgroundColor:p.color,pointBorderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#142544',padding:10,displayColors:false,callbacks:{label:c=>'€'+f(c.parsed.y)}}},scales:{x:{grid:{display:false},ticks:{color:'#5d7299',font:{size:9},maxTicksLimit:5}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5d7299',font:{size:9},callback:v=>'€'+fi(v)}}}}});
 }
+
 function opm(p=null){
   ei=p?p.id:null;
   document.getElementById('pmt').textContent=p?'Editar producto':'Nuevo producto';
@@ -505,20 +602,33 @@ async function rp(){
   else{ap.maturityDate='';ap.reminder=false}
   await sv();cm('rmod');rdt();
 }
+
+// ===== GOAL EDIT =====
+function ogm(){
+  document.getElementById('gN').value=goal.name;
+  document.getElementById('gA').value=goal.target;
+  document.getElementById('gmod').classList.add('sh');
+}
+async function sg(){
+  const n=document.getElementById('gN').value.trim()||'Objetivo';
+  const a=parseFloat(document.getElementById('gA').value);
+  if(!a||a<=0){ts('Cantidad inválida');return}
+  goal={name:n,target:a};
+  await sv();cm('gmod');rd();
+}
+
 function cm(id){document.getElementById(id).classList.remove('sh')}
 document.querySelectorAll('.mb').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('sh')}));
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('ac'));t.classList.add('ac');cf=t.dataset.f;rhe();rps()}));
 
-// ===== EXPORT / IMPORT =====
 function oem(){
-  // Mostrar estado de almacenamiento
   const s=document.getElementById('storageStatus');
   let msg='',cls='dst';
-  if(storageMode==='cloud')msg='✓ Datos guardados en la nube de Claude';
+  if(storageMode==='cloud')msg='✓ Datos guardados en la nube';
   else if(storageMode==='local')msg='✓ Datos guardados localmente en este navegador';
   else{msg='⚠ Almacenamiento no disponible · usa Importar/Exportar para no perder datos';cls='dst warn'}
   s.innerHTML=`<div class="${cls}">${msg}</div>`;
-  document.getElementById('expTxt').value=JSON.stringify(ps,null,2);
+  document.getElementById('expTxt').value=JSON.stringify({products:ps,goal:goal},null,2);
   document.getElementById('impTxt').value='';
   swt('exp');
   document.getElementById('emod').classList.add('sh');
@@ -533,26 +643,22 @@ async function cpy(){
   const txt=document.getElementById('expTxt').value;
   try{
     if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(txt);ts('✓ Copiado al portapapeles')}
-    else{
-      const el=document.getElementById('expTxt');el.select();el.setSelectionRange(0,99999);
-      document.execCommand('copy');ts('✓ Copiado')
-    }
-  }catch(e){
-    const el=document.getElementById('expTxt');el.select();el.setSelectionRange(0,99999);
-    ts('Selecciona y copia manualmente');
-  }
+    else{const el=document.getElementById('expTxt');el.select();el.setSelectionRange(0,99999);document.execCommand('copy');ts('✓ Copiado')}
+  }catch(e){const el=document.getElementById('expTxt');el.select();el.setSelectionRange(0,99999);ts('Selecciona y copia manualmente')}
 }
 async function impd(){
   const txt=document.getElementById('impTxt').value.trim();
   if(!txt){ts('Pega el JSON primero');return}
   try{
     const data=JSON.parse(txt);
-    if(!Array.isArray(data))throw new Error('No es array');
-    if(!confirm(`¿Sustituir tus ${ps.length} productos por los ${data.length} del backup?`))return;
-    ps=data;
-    await sv();
-    cm('emod');
-    rd();
+    let newPs=[],newGoal=null;
+    if(Array.isArray(data)){newPs=data}
+    else if(data.products&&Array.isArray(data.products)){newPs=data.products;if(data.goal)newGoal=data.goal}
+    else throw new Error('Formato inválido');
+    if(!confirm(`¿Sustituir tus ${ps.length} productos por los ${newPs.length} del backup?`))return;
+    ps=newPs;
+    if(newGoal)goal=newGoal;
+    await sv();cm('emod');rd();
     ts('✓ Datos restaurados');
   }catch(e){ts('JSON inválido')}
 }
@@ -560,5 +666,6 @@ async function impd(){
 function ts(m){const t=document.getElementById('tst');t.textContent=m;t.classList.add('sh');setTimeout(()=>t.classList.remove('sh'),2200)}
 ld();
 </script>
+
 </body>
 </html>
