@@ -1250,22 +1250,38 @@ function renderSummary(){
   const savingRate=inMo>0?(savingMo/inMo)*100:0;
 
   // Proyección fin de año basada en aportaciones netas mensuales recientes
-  const monthsAgg={};
-  ps.forEach(p=>p.movements.forEach(m=>{
-    if(m.type!=="contribution"&&m.type!=="withdrawal") return;
-    const mo=m.date.slice(0,7);
-    if(!monthsAgg[mo]) monthsAgg[mo]={in:0,out:0};
-    if(m.type==="contribution") monthsAgg[mo].in+=m.amount;
-    else monthsAgg[mo].out+=m.amount;
-  }));
-  // Media de últimos 3 meses (excluyendo actual si está vacío)
-  const sortedMonths=Object.keys(monthsAgg).sort().slice(-3);
-  const avgNet=sortedMonths.length?sortedMonths.reduce((s,mo)=>s+(monthsAgg[mo].in-monthsAgg[mo].out),0)/sortedMonths.length:0;
-  // Meses restantes hasta fin de año
+  // Proyección basada en el plan mensual de ahorro
+  // (configurable en la pantalla "Plan de ahorro" del Home)
+  const plan=state.goal.monthlyPlan||[];
   const now=new Date();
+  const curYear=now.getFullYear();
+  // Suma de lo planificado desde el mes que viene hasta diciembre del año actual
+  const remainingPlan=plan.filter(p=>{
+    const [y,m]=p.month.split("-").map(Number);
+    return y===curYear && m>now.getMonth()+1; // meses futuros del año en curso
+  }).reduce((s,p)=>s+p.amount,0);
+  // Lo planificado para el mes actual (si lo hay)
+  const curMonthPlan=plan.find(p=>p.month===tm);
+  const curPlanAmount=curMonthPlan?curMonthPlan.amount:0;
+  // Lo que ya llevas aportado este mes (sin contar intereses ni transferencias internas)
+  // Calculamos el delta del mes actual: patrimonio fin de mes - patrimonio inicio de mes
+  let balStartOfMonth=0, balNow=totalNet;
+  ps.forEach(p=>p.movements.forEach(m=>{
+    if(m.date<tm+"-01"){
+      balStartOfMonth+=(m.type==="contribution"?m.amount:m.type==="withdrawal"?-m.amount:toNet(m.amount));
+    }
+  }));
+  const curMonthReal=balNow-balStartOfMonth;
+  // Lo que queda por ahorrar este mes según el plan
+  const curMonthLeft=Math.max(0,curPlanAmount-curMonthReal);
+
   const monthsLeft=11-now.getMonth();
-  const projectedEoy=totalNet+avgNet*monthsLeft;
-  const projectedGoal=avgNet>0?(state.goal.target-totalNet)/avgNet:null;
+  const projectedEoy=totalNet+curMonthLeft+remainingPlan;
+  const monthlyAvgPlan=monthsLeft>0?(curMonthLeft+remainingPlan)/(monthsLeft+1):0;
+  const projectedGoal=monthlyAvgPlan>0?(state.goal.target-totalNet)/monthlyAvgPlan:null;
+  // Para compatibilidad con el resto del código
+  const avgNet=monthlyAvgPlan;
+  const completedDeltas={length:plan.filter(p=>{const [y,m]=p.month.split("-").map(Number);return y===curYear&&m>=now.getMonth()+1;}).length};
 
   // Distribución por producto
   const dist=ps.map(p=>({...p,bal:getBal(p)})).filter(p=>p.bal>0).sort((a,b)=>b.bal-a.bal);
@@ -1325,7 +1341,7 @@ function renderSummary(){
       h("span",{style:{fontSize:"15px"}},["🔮"]),
       h("div",{class:"label",style:{margin:"0"}},["Proyección a fin de año"])
     ]));
-    pc.appendChild(h("div",{style:{fontSize:"11px",color:"rgba(255,255,255,0.45)",marginBottom:"10px",lineHeight:"1.5"}},[`Basado en una media de €${fmt(avgNet,0)}/mes los últimos ${sortedMonths.length} meses${monthsLeft>0?` · faltan ${monthsLeft} meses`:" · año casi terminado"}`]));
+    pc.appendChild(h("div",{style:{fontSize:"11px",color:"rgba(255,255,255,0.45)",marginBottom:"10px",lineHeight:"1.5"}},[`Según tu plan de ahorro · faltan €${fmt(remainingPlan+curMonthLeft,0)} por aportar hasta diciembre${curMonthLeft>0?` (este mes te quedan €${fmt(curMonthLeft,0)})`:" (este mes ya cumplido)"}`]));
     const eoyRow=h("div",{style:{background:"rgba(106,171,247,0.07)",border:"1px solid rgba(106,171,247,0.22)",borderRadius:"12px",padding:"14px"}});
     eoyRow.appendChild(h("div",{style:{fontSize:"10px",letterSpacing:".1em",color:"rgba(106,171,247,0.7)"}},["PATRIMONIO ESPERADO 31 DIC"]));
     const eoyN=h("div",{style:{margin:"3px 0 0"}}); eoyN.appendChild(bigNum(projectedEoy,"#6aabf7",30,16));
