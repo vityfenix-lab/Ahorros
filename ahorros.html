@@ -1309,7 +1309,7 @@ function renderSummary(){
   // Tasa de ahorro
   if(inMo>0){
     const tr=h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 12px",background:"rgba(106,171,247,0.07)",border:"1px solid rgba(106,171,247,0.2)",borderRadius:"11px"}});
-    tr.appendChild(h("div",[
+    tr.appendChild(h("div",{},[
       h("div",{style:{fontSize:"9px",letterSpacing:".1em",color:"rgba(106,171,247,0.7)"}},["TASA DE AHORRO"]),
       h("div",{style:{fontSize:"10px",color:"rgba(255,255,255,0.4)",marginTop:"2px"}},["% de ingresos ahorrados"])
     ]));
