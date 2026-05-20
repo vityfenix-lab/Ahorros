@@ -182,7 +182,27 @@ const DATA0 = {
   ]}
 };
 
-let state = JSON.parse(JSON.stringify(DATA0));
+// ─── PERSISTENCIA ─────────────────────────────────────────────────────────────
+const STORAGE_KEY = "ahorros_app_v1";
+
+function loadState(){
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if(saved){
+      const parsed = JSON.parse(saved);
+      if(parsed.products && parsed.goal) return parsed;
+    }
+  } catch(e){ console.log("Error cargando:", e); }
+  return JSON.parse(JSON.stringify(DATA0));
+}
+
+function saveState(){
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch(e){ console.log("Error guardando:", e); }
+}
+
+let state = loadState();
 
 // ─── UTILS ────────────────────────────────────────────────────────────────────
 const toNet   = g => g*(1-TAX);
@@ -605,6 +625,20 @@ function renderBackup(){
     }catch{msg.textContent="Error: JSON inválido o formato incorrecto";msg.style.color="#ff5f5f";}
   }},["Restaurar datos"]);
   rc.appendChild(ta); rc.appendChild(msg); rc.appendChild(restBtn); scrl.appendChild(rc);
+
+  // Reset
+  const rstCard=h("div",{class:"card",style:{marginTop:"12px"}});
+  rstCard.appendChild(h("div",{style:{fontSize:"13px",fontWeight:"600",marginBottom:"6px"}},["Restablecer"]));
+  rstCard.appendChild(h("div",{style:{fontSize:"11px",color:"rgba(255,255,255,0.35)",marginBottom:"12px",lineHeight:"1.6"}},["Borra todos los datos y vuelve al estado inicial de ejemplo. Esta acción no se puede deshacer."]));
+  const rstBtn=h("button",{class:"btn btn-red",onclick:()=>{
+    if(confirm("¿Borrar todos los datos y volver al estado inicial? Esta acción no se puede deshacer.")){
+      localStorage.removeItem(STORAGE_KEY);
+      state = JSON.parse(JSON.stringify(DATA0));
+      render();
+    }
+  }},["Borrar todo y restablecer"]);
+  rstCard.appendChild(rstBtn); scrl.appendChild(rstCard);
+  scrl.appendChild(h("div",{style:{height:"22px"}}));
   return scrl;
 }
 
@@ -952,6 +986,7 @@ function renderEditPlan(){
 
 // ─── MAIN RENDER ─────────────────────────────────────────────────────────────
 function render(){
+  saveState();
   destroyCharts();
   const app=document.getElementById("app");
   app.innerHTML="";
