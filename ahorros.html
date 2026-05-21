@@ -234,6 +234,12 @@ let state = loadState();
 if(!state.categoryHints) state.categoryHints = {};
 if(!state.recurring) state.recurring = [];
 if(!state.meta) state.meta = {};
+// Por defecto, el resumen empieza en el siguiente mes (más útil al iniciar)
+if(!state.meta.summaryMonth){
+  const d=new Date();
+  d.setMonth(d.getMonth()+1);
+  state.meta.summaryMonth=d.toISOString().slice(0,7);
+}
 
 // ─── AUTO-CATEGORIZACIÓN ──────────────────────────────────────────────────────
 function normalizeNote(note){
@@ -1237,7 +1243,15 @@ function renderEditGoal(){
 function renderSummary(){
   const ps=state.products;
   const totalNet=ps.reduce((s,p)=>s+getBal(p),0);
-  const tm=todayM();
+  const tm=state.meta.summaryMonth||todayM();
+
+  // Lista de meses disponibles para seleccionar: actual + 6 hacia atrás + 6 hacia adelante
+  const monthOpts=[];
+  const ref=new Date();
+  for(let i=-6;i<=6;i++){
+    const d=new Date(ref.getFullYear(),ref.getMonth()+i,1);
+    monthOpts.push(d.toISOString().slice(0,7));
+  }
 
   // Ingresos / gastos totales del mes (suma de todos los productos)
   let inMo=0, outMo=0;
@@ -1255,19 +1269,19 @@ function renderSummary(){
   const plan=state.goal.monthlyPlan||[];
   const now=new Date();
   const curYear=now.getFullYear();
+  const realTm=todayM(); // mes real (no el seleccionado en el selector)
   // Suma de lo planificado desde el mes que viene hasta diciembre del año actual
   const remainingPlan=plan.filter(p=>{
     const [y,m]=p.month.split("-").map(Number);
     return y===curYear && m>now.getMonth()+1; // meses futuros del año en curso
   }).reduce((s,p)=>s+p.amount,0);
-  // Lo planificado para el mes actual (si lo hay)
-  const curMonthPlan=plan.find(p=>p.month===tm);
+  // Lo planificado para el mes real (si lo hay)
+  const curMonthPlan=plan.find(p=>p.month===realTm);
   const curPlanAmount=curMonthPlan?curMonthPlan.amount:0;
-  // Lo que ya llevas aportado este mes (sin contar intereses ni transferencias internas)
-  // Calculamos el delta del mes actual: patrimonio fin de mes - patrimonio inicio de mes
+  // Lo que ya llevas aportado este mes real
   let balStartOfMonth=0, balNow=totalNet;
   ps.forEach(p=>p.movements.forEach(m=>{
-    if(m.date<tm+"-01"){
+    if(m.date<realTm+"-01"){
       balStartOfMonth+=(m.type==="contribution"?m.amount:m.type==="withdrawal"?-m.amount:toNet(m.amount));
     }
   }));
@@ -1307,12 +1321,34 @@ function renderSummary(){
   tc.appendChild(tcN);
   pad.appendChild(tc);
 
-  // Mes actual
+  // Mes actual (seleccionable)
   const mc=h("div",{class:"card"});
-  mc.appendChild(h("div",{style:{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:"14px"}},[
-    h("div",{style:{fontSize:"14px",fontWeight:"600"}},["Este mes · "+moLbl(tm)]),
-    h("div",{style:{fontSize:"15px",fontWeight:"800",color:savingMo>=0?"#00d4aa":"#ff5f5f"}},[(savingMo>=0?"+":"")+"€"+fmt(savingMo,0)])
-  ]));
+  const monthNav=h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"14px",gap:"10px"}});
+  const idx=monthOpts.indexOf(tm);
+  const goMonth=(dir)=>{
+    const newIdx=idx+dir;
+    if(newIdx<0||newIdx>=monthOpts.length) return;
+    state.meta.summaryMonth=monthOpts[newIdx];
+    render();
+  };
+  const prevBtn=h("button",{style:{background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.08)",color:idx>0?"white":"rgba(255,255,255,0.2)",borderRadius:"9px",width:"32px",height:"32px",cursor:idx>0?"pointer":"default",fontFamily:"'DM Mono',monospace",fontSize:"15px",flexShrink:"0"},onclick:()=>goMonth(-1)},["‹"]);
+  const nextBtn=h("button",{style:{background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.08)",color:idx<monthOpts.length-1?"white":"rgba(255,255,255,0.2)",borderRadius:"9px",width:"32px",height:"32px",cursor:idx<monthOpts.length-1?"pointer":"default",fontFamily:"'DM Mono',monospace",fontSize:"15px",flexShrink:"0"},onclick:()=>goMonth(1)},["›"]);
+  const isCurrent=tm===todayM();
+  const monthLbl=h("div",{style:{flex:"1",textAlign:"center"}});
+  const monthLblTxt=h("div",{style:{fontSize:"14px",fontWeight:"600"}},[moLbl(tm)]);
+  monthLbl.appendChild(monthLblTxt);
+  if(!isCurrent){
+    const todayBtn=h("button",{style:{background:"none",border:"none",color:"#6aabf7",fontSize:"10px",cursor:"pointer",marginTop:"2px",fontFamily:"'DM Mono',monospace",padding:"0"},onclick:()=>{state.meta.summaryMonth=todayM();render();}},["↩ ir a hoy"]);
+    monthLbl.appendChild(todayBtn);
+  } else {
+    monthLbl.appendChild(h("div",{style:{fontSize:"10px",color:"rgba(255,255,255,0.35)",marginTop:"2px"}},["mes actual"]));
+  }
+  const savBadge=h("div",{style:{fontSize:"15px",fontWeight:"800",color:savingMo>=0?"#00d4aa":"#ff5f5f",flexShrink:"0"}},[(savingMo>=0?"+":"")+"€"+fmt(savingMo,0)]);
+  monthNav.appendChild(prevBtn);
+  monthNav.appendChild(monthLbl);
+  monthNav.appendChild(nextBtn);
+  monthNav.appendChild(savBadge);
+  mc.appendChild(monthNav);
   const mRow=h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px",marginBottom:"12px"}});
   const inb=h("div",{style:{background:"rgba(0,212,170,0.08)",border:"1px solid rgba(0,212,170,0.2)",borderRadius:"11px",padding:"10px 12px"}});
   inb.appendChild(h("div",{style:{fontSize:"9px",letterSpacing:".1em",color:"rgba(0,212,170,0.7)"}},["INGRESOS TOTALES"]));
